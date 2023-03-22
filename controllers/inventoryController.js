@@ -14,6 +14,15 @@ exports.index = (_req, res) => {
 exports.singleWarehouse = (req, res) => {
   knex("inventories")
     .where({ id: req.params.id })
+    .select(
+      "id",
+      "warehouse_name",
+      "item_name",
+      "description",
+      "category",
+      "status",
+      "quantity"
+    )
     .then((inventories) => {
       if (inventories.length === 0) {
         return res.status(404).json({
