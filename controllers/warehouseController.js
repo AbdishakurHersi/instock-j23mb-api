@@ -141,7 +141,7 @@ exports.updateWarehouse = (req, res) => {
     !req.body.contact_phone ||
     !req.body.contact_email
   ) {
-    return res.status(400).json({
+    res.status(400).json({
       message:
         "Missing one or more required fields: warehouse name, address, city, country, contact name, contact position, contact phone, and contact email",
     });
@@ -153,7 +153,7 @@ exports.updateWarehouse = (req, res) => {
       req.body.contact_email
     )
   ) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Please enter a valid email address.",
     });
   }
@@ -164,7 +164,7 @@ exports.updateWarehouse = (req, res) => {
       req.body.contact_phone
     )
   ) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Please enter a valid phone number.",
     });
   }
@@ -172,10 +172,18 @@ exports.updateWarehouse = (req, res) => {
   knex("warehouses")
     .update(req.body)
     .where({ id: req.params.id })
+    .then(() => {
+      // Grab the new data from this record
+      return knex("warehouses").where({ id: req.params.id });
+    })
     .then((warehouses) => {
-      res
-        .status(200)
-        .send(`Warehouse with id: ${req.params.id} has been updated`);
+      if (warehouses.length === 0) {
+        res.status(404).json({
+          message: `Unable to update warehouse with id: ${req.params.id}`,
+        });
+      } else {
+        res.status(200).json(warehouses[0]);
+      }
     })
     .catch((err) => {
       res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`);
