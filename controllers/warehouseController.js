@@ -1,8 +1,7 @@
 const knex = require("knex")(require("../knexfile"));
 
 exports.index = (_req, res) => {
-  knex("warehouse")
-    .select("id", "name", "manager")
+  knex("warehouses")
     .then((data) => {
       res.status(200).json(data);
     })
@@ -10,7 +9,7 @@ exports.index = (_req, res) => {
 };
 
 exports.singleWarehouse = (req, res) => {
-  knex("warehouse")
+  knex("warehouses")
     .where({ id: req.params.id })
     .then((warehouses) => {
       if (warehouses.length === 0) {
@@ -31,7 +30,7 @@ exports.singleWarehouse = (req, res) => {
 
 exports.warehouseInventories = (req, res) => {
   // Find all inventories for a given warehouse id (req.params.id)
-  knex("inventory")
+  knex("inventories")
     .where({ warehouse_id: req.params.id })
     .then((inventories) => {
       if (inventories.length === 0) {
@@ -54,7 +53,7 @@ exports.warehouseInventories = (req, res) => {
 
 exports.deleteWarehouse = (req, res) => {
   // Delete the warehouse with ID matching req.params.id
-  knex("warehouse")
+  knex("warehouses")
     .where({ id: req.params.id })
     .del()
     .then((numberOfWarehousesDeleted) => {
@@ -93,7 +92,7 @@ exports.addWarehouse = (req, res) => {
   const { name, position, manager, address, phone, email } = req.body;
 
   // Check for unique email
-  knex("warehouse")
+  knex("warehouses")
     .where({ email: email })
     .then((warehouses) => {
       if (warehouses.length > 0) {
@@ -102,7 +101,7 @@ exports.addWarehouse = (req, res) => {
         });
       }
 
-      knex("warehouse")
+      knex("warehouses")
         .insert({
           name,
           position,
@@ -114,7 +113,7 @@ exports.addWarehouse = (req, res) => {
         .then((createdIds) => {
           const warehouseId = createdIds[0];
 
-          return knex("warehouse").where({ id: warehouseId });
+          return knex("warehouses").where({ id: warehouseId });
         })
         .then((warehouses) => {
           return res.status(201).json(warehouses[0]);
@@ -128,44 +127,65 @@ exports.addWarehouse = (req, res) => {
     });
 };
 
+// PUT/EDIT request for a warehouse by id.
 exports.updateWarehouse = (req, res) => {
+  // Checks for an empty field in the PUT body request.
   if (
-    !req.body.name ||
-    !req.body.position ||
-    !req.body.manager ||
+    !req.body.id ||
+    !req.body.warehouse_name ||
     !req.body.address ||
-    !req.body.phone ||
-    !req.body.email
+    !req.body.city ||
+    !req.body.country ||
+    !req.body.contact_name ||
+    !req.body.contact_position ||
+    !req.body.contact_phone ||
+    !req.body.contact_email
   ) {
-    return res.status(400).json({
+    res.status(400).json({
       message:
-        "Missing one or more required fields: name, position, manager, address, phone, email",
+        "Missing one or more required fields: warehouse name, address, city, country, contact name, contact position, contact phone, and contact email",
     });
   }
 
-  const { name, position, manager, address, phone, email } = req.body;
+  // Contact email validation
+  if (
+    !/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+      req.body.contact_email
+    )
+  ) {
+    res.status(400).json({
+      message: "Please enter a valid email address.",
+    });
+  }
 
-  knex("warehouse")
-    .update({
-      name,
-      position,
-      manager,
-      address,
-      phone,
-      email,
-    })
+  // Contact phone validation
+  if (
+    !/^[+]?(1\-|1\s|1|\d{3}\-|\d{3}\s|)?((\(\d{3}\))|\d{3})(\-|\s)?(\d{3})(\-|\s)?(\d{4})$/g.test(
+      req.body.contact_phone
+    )
+  ) {
+    res.status(400).json({
+      message: "Please enter a valid phone number.",
+    });
+  }
+
+  knex("warehouses")
+    .update(req.body)
     .where({ id: req.params.id })
     .then(() => {
       // Grab the new data from this record
-      return knex("warehouse").where({ id: req.params.id });
+      return knex("warehouses").where({ id: req.params.id });
     })
     .then((warehouses) => {
-      res.json(warehouses[0]);
+      if (warehouses.length === 0) {
+        res.status(404).json({
+          message: `Unable to update warehouse with id: ${req.params.id}`,
+        });
+      } else {
+        res.status(200).json(warehouses[0]);
+      }
     })
-    .catch((error) => {
-      return res.status(400).json({
-        message: "There was an issue with the request",
-        error,
-      });
+    .catch((err) => {
+      res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`);
     });
 };
