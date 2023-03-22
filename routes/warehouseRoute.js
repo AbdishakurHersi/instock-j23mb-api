@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const warehouseController = require("../controllers/warehouseController");
+const inventoryController = require("../controllers/inventoryController");
 
 router
   .route("/")
@@ -12,6 +13,6 @@ router
   .delete(warehouseController.deleteWarehouse)
   .put(warehouseController.updateWarehouse);
 
-router.route("/:id/inventories").get(warehouseController.warehouseInventories);
+router.route("/:id/inventories").get(inventoryController.warehouseInventories);
 
 module.exports = router;
