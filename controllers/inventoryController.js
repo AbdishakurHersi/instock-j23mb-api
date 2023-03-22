@@ -11,11 +11,12 @@ exports.index = (_req, res) => {
 };
 
 // Gets information for an single inventory item by inventory id.
-exports.singleWarehouse = (req, res) => {
+exports.singleInventoryItem = (req, res) => {
   knex("inventories")
-    .where({ id: req.params.id })
+    .where({ "inventories.id": req.params.id })
+    .innerJoin("warehouses", "warehouses.id", "inventories.warehouse_id")
     .select(
-      "id",
+      "inventories.id",
       "warehouse_name",
       "item_name",
       "description",
