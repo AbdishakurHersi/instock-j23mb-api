@@ -10,39 +10,17 @@ exports.index = (_req, res) => {
 };
 
 exports.singleWarehouse = (req, res) => {
-  knex("warehouses")
-    .where({ id: req.params.id })
+   knex("warehouses")
+   .where({ "warehouses.id": req.params.id })
+   .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
+   .select('*')
     .then((warehouses) => {
       if (warehouses.length === 0) {
         return res.status(404).json({
           message: `Unable to find warehouse with id: ${req.params.id}`,
         });
       }
-
-      res.json(warehouses[0]);
-    })
-    .catch((error) => {
-      return res.status(400).json({
-        message: "There was an issue with the request",
-        error,
-      });
-    });
-};
-
-exports.warehouseInventories = (req, res) => {
-  // Find all inventories for a given warehouse id (req.params.id)
-  knex("inventories")
-    .where({ warehouse_id: req.params.id })
-    .then((inventories) => {
-      if (inventories.length === 0) {
-        // Diving Deeper: If warehouse exists, send back empty array instead
-
-        return res.status(404).json({
-          error: `Unable to find inventories for warehouse ${req.params.id}`,
-        });
-      }
-
-      res.json(inventories);
+      res.json(warehouses);
     })
     .catch((error) => {
       return res.status(400).json({
