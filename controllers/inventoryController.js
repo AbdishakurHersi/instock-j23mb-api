@@ -62,3 +62,26 @@ exports.warehouseInventories = (req, res) => {
       });
     });
 };
+
+exports.deleteInventoryItem = (req, res) => {
+   // Delete the warehouse with ID matching req.params.id
+   knex("inventories")
+     .where({ id: req.params.id })
+     .del()
+     .then((numItemsDeleted) => {
+       if (numItemsDeleted === 0) {
+         return res.status(404).json({
+           message: `Inventory item with id: ${req.params.id} not found`,
+         });
+       }
+ 
+       // 204 - No Content
+       res.sendStatus(204);
+     })
+     .catch((error) => {
+       return res.status(400).json({
+         message: "There was an issue with the request",
+         error,
+       });
+     });
+ };
