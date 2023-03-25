@@ -102,6 +102,7 @@ exports.addWarehouse = (req, res) => {
       return knex("warehouses").where("id", newWarehouse.id).first();
     })
     .then((newWarehouse) => {
+      console.log("Got warehouse:", newWarehouse);
       return res.status(201).json(newWarehouse);
     })
     .catch((error) => {
