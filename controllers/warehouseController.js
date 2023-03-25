@@ -92,13 +92,15 @@ exports.addWarehouse = (req, res) => {
       message: "Please enter a valid phone number.",
     });
   }
+
+  //Insert new warehouse
   console.log("Inserting record...");
   const newWarehouse = { ...req.body, id: uniqid() };
+
   knex("warehouses")
     .insert(newWarehouse)
     .then(() => {
       console.log(req.body);
-      // const warehouseId = req.body.id;
       return knex("warehouses").where("id", newWarehouse.id).first();
     })
     .then((newWarehouse) => {
