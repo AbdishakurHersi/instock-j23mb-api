@@ -64,24 +64,64 @@ exports.warehouseInventories = (req, res) => {
 };
 
 exports.deleteInventoryItem = (req, res) => {
-   // Delete the warehouse with ID matching req.params.id
-   knex("inventories")
-     .where({ id: req.params.id })
-     .del()
-     .then((numItemsDeleted) => {
-       if (numItemsDeleted === 0) {
-         return res.status(404).json({
-           message: `Inventory item with id: ${req.params.id} not found`,
-         });
-       }
- 
-       // 204 - No Content
-       res.sendStatus(204);
-     })
-     .catch((error) => {
-       return res.status(400).json({
-         message: "There was an issue with the request",
-         error,
-       });
-     });
- };
+  // Delete the warehouse with ID matching req.params.id
+  knex("inventories")
+    .where({ id: req.params.id })
+    .del()
+    .then((numItemsDeleted) => {
+      if (numItemsDeleted === 0) {
+        return res.status(404).json({
+          message: `Inventory item with id: ${req.params.id} not found`,
+        });
+      }
+
+      // 204 - No Content
+      res.sendStatus(204);
+    })
+    .catch((error) => {
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
+    });
+};
+
+exports.addInventory = (req, res) => {
+  if (
+    !req.body.name ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.quantity ||
+    !req.body.warehouse
+  ) {
+    return res.status(400).json({
+      message:
+        "Missing one or more required fields: name, description, category, quantity, warehouse",
+    });
+  }
+
+  const { name, description, category, quantity, warehouse } = req.body;
+
+  knex("inventory")
+    .insert({
+      name,
+      description,
+      category,
+      quantity,
+      warehouse,
+    })
+    .then((createdIds) => {
+      const warehouseId = createdIds[0];
+
+      return knex("inventory").where({ id: inventoryId });
+    })
+    .then((inventory) => {
+      return res.status(201).json(inventory[0]);
+    })
+    .catch((error) => {
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
+    });
+};
