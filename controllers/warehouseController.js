@@ -2,18 +2,17 @@ const knex = require("knex")(require("../knexfile"));
 
 exports.index = (_req, res) => {
   knex("warehouses")
-    .select("id")
-    .then((warehouses) => {
-      res.status(200).json(warehouses);
+    .then((data) => {
+      res.status(200).json(data);
     })
     .catch((err) => res.status(400).send(`Error retrieving Warehouses ${err}`));
 };
 
 exports.singleWarehouse = (req, res) => {
-   knex("warehouses")
-   .where({ "warehouses.id": req.params.id })
-   .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
-   .select('*')
+  knex("warehouses")
+    .where({ "warehouses.id": req.params.id })
+    .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
+    .select("*")
     .then((warehouses) => {
       if (warehouses.length === 0) {
         return res.status(404).json({
