@@ -1,4 +1,5 @@
 const knex = require("knex")(require("../knexfile"));
+const uniqid = require("uniqid");
 
 exports.index = (_req, res) => {
   knex("warehouses")
@@ -9,10 +10,10 @@ exports.index = (_req, res) => {
 };
 
 exports.singleWarehouse = (req, res) => {
-   knex("warehouses")
-   .where({ "warehouses.id": req.params.id })
-   .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
-   .select('*')
+  knex("warehouses")
+    .where({ "warehouses.id": req.params.id })
+    .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
+    .select("*")
     .then((warehouses) => {
       if (warehouses.length === 0) {
         return res.status(404).json({
@@ -91,17 +92,20 @@ exports.addWarehouse = (req, res) => {
       message: "Please enter a valid phone number.",
     });
   }
-
+  console.log("Inserting record...");
+  const newWarehouse = { ...req.body, id: uniqid() };
   knex("warehouses")
-    .insert(req.body)
-    .then((createdIds) => {
-      const warehouseId = createdIds[0];
-      return knex("warehouses").where({ id: warehouseId });
+    .insert(newWarehouse)
+    .then(() => {
+      console.log(req.body);
+      // const warehouseId = req.body.id;
+      return knex("warehouses").where("id", newWarehouse.id).first();
     })
-    .then((warehouses) => {
-      return res.status(201).json(warehouses[0]);
+    .then((newWarehouse) => {
+      return res.status(201).json(newWarehouse);
     })
     .catch((error) => {
+      console.log(error);
       return res.status(400).json({
         message: "There was an issue with the request",
         error,
