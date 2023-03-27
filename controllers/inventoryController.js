@@ -86,28 +86,40 @@ exports.deleteInventoryItem = (req, res) => {
     });
 };
 
-// Gets information for an single inventory item by inventory id.
+// Edits information for an single inventory item by inventory id.
+
 exports.updateInventoryItem = (req, res) => {
+  // Check for an empty field in the PUT body request.
+  if (
+    !req.body.id ||
+    !req.body.warehouse_id ||
+    !req.body.item_name ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.status ||
+    !req.body.quantity
+  ) {
+    res.status(400).json({
+      message: "All fields are required.  Please check your entries.",
+    });
+  }
   knex("inventories")
-    .where({ "inventories.id": req.params.id })
-    .innerJoin("warehouses", "warehouses.id", "inventories.warehouse_id")
-    .select(
-      "inventories.id",
-      "warehouse_name",
-      "item_name",
-      "description",
-      "category",
-      "status",
-      "quantity"
-    )
+    .update(req.body)
+    .where({ id: req.params.id })
+    .then(() => {
+      return knex("inventories").where({ id: req.params.id });
+    })
     .then((inventories) => {
       if (inventories.length === 0) {
         return res.status(404).json({
           message: `Unable to find inventory with id: ${req.params.id}`,
         });
+      } else {
+        res.status(200).json({
+          message: `Successfully updated inventory: ${req.params.id}`,
+          inventory: inventories[0],
+        });
       }
-
-      res.json(inventories[0]);
     })
     .catch((error) => {
       return res.status(400).json({
