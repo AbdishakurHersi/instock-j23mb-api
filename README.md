@@ -38,10 +38,10 @@ Once you have installed and started the InStock app using the instructions above
 
 From the backend/server side terminal, enter:
 
-    ### `npm run seed`
+### 'npm run seed`
 
 You will see a meesage when complete.
 
 ---
 
-We hope you enjoy using our app‼
+We hope you enjoy using our app❗
