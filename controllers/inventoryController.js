@@ -1,4 +1,5 @@
 const knex = require("knex")(require("../knexfile"));
+const uniqid = require("uniqid");
 
 exports.index = (_req, res) => {
   knex("inventories")
@@ -114,4 +115,41 @@ exports.updateInventoryItem = (req, res) => {
     .catch((err) =>
       res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`)
     );
+
+//POST Request - Add New Inventory
+exports.addInventory = (req, res) => {
+  if (
+    !req.body.warehouse_id ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.quantity ||
+    !req.body.item_name ||
+    !req.body.status
+  ) {
+    return res.status(400).json({
+      message:
+        "Missing one or more required fields: name, description, category, quantity, warehouse",
+    });
+  }
+  //Insert new inventory
+  console.log("Inserting record...");
+
+  const newInventory = { ...req.body, id: uniqid() };
+
+  knex("inventories")
+    .insert(newInventory)
+    .then(() => {
+      console.log(req.body);
+      return knex("inventories").where("id", newInventory.id).first();
+    })
+    .then((newInventory) => {
+      console.log("Got inventory:", newInventory);
+      return res.status(201).json(newInventory);
+    })
+    .catch((error) => {
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
+    });
 };

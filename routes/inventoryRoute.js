@@ -8,4 +8,10 @@ router
   .delete(inventoryController.deleteInventoryItem)
   .put(inventoryController.updateInventoryItem);
 
+router
+  .route("/")
+  .get(inventoryController.index)
+  .post(inventoryController.addInventory);
+
+
 module.exports = router;
