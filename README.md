@@ -44,4 +44,8 @@ You will see a meesage when complete.
 
 ---
 
+### Our Team: ###
+
+Abdishakur Hersi, Geraldine Gerardo, Gabe Ellis, Trevor Werner
+
 We hope you enjoy using our app❗
