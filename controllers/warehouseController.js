@@ -1,4 +1,5 @@
 const knex = require("knex")(require("../knexfile"));
+const uniqid = require("uniqid");
 
 exports.index = (_req, res) => {
   knex("warehouses")
@@ -9,10 +10,10 @@ exports.index = (_req, res) => {
 };
 
 exports.singleWarehouse = (req, res) => {
-   knex("warehouses")
-   .where({ "warehouses.id": req.params.id })
-   .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
-   .select('*')
+  knex("warehouses")
+    .where({ "warehouses.id": req.params.id })
+    .leftJoin("inventories", "warehouses.id", "inventories.warehouse_id")
+    .select("*")
     .then((warehouses) => {
       if (warehouses.length === 0) {
         return res.status(404).json({
@@ -52,14 +53,17 @@ exports.deleteWarehouse = (req, res) => {
     });
 };
 
+//POST Request - Add New Warehouse
 exports.addWarehouse = (req, res) => {
   if (
-    !req.body.name ||
-    !req.body.position ||
-    !req.body.manager ||
+    !req.body.warehouse_name ||
     !req.body.address ||
-    !req.body.phone ||
-    !req.body.email
+    !req.body.city ||
+    !req.body.country ||
+    !req.body.contact_name ||
+    !req.body.contact_position ||
+    !req.body.contact_phone ||
+    !req.body.contact_email
   ) {
     return res.status(400).json({
       message:
@@ -67,41 +71,48 @@ exports.addWarehouse = (req, res) => {
     });
   }
 
-  const { name, position, manager, address, phone, email } = req.body;
+  // Contact email validation
+  if (
+    !/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+      req.body.contact_email
+    )
+  ) {
+    res.status(400).json({
+      message: "Please enter a valid email address.",
+    });
+  }
 
-  // Check for unique email
+  // Contact phone validation
+  if (
+    !/^[+]?(1\-|1\s|1|\d{3}\-|\d{3}\s|)?((\(\d{3}\))|\d{3})(\-|\s)?(\d{3})(\-|\s)?(\d{4})$/g.test(
+      req.body.contact_phone
+    )
+  ) {
+    res.status(400).json({
+      message: "Please enter a valid phone number.",
+    });
+  }
+
+  //Insert new warehouse
+  console.log("Inserting record...");
+  const newWarehouse = { ...req.body, id: uniqid() };
+
   knex("warehouses")
-    .where({ email: email })
-    .then((warehouses) => {
-      if (warehouses.length > 0) {
-        return res.status(400).json({
-          message: "Email is already taken",
-        });
-      }
-
-      knex("warehouses")
-        .insert({
-          name,
-          position,
-          manager,
-          address,
-          phone,
-          email,
-        })
-        .then((createdIds) => {
-          const warehouseId = createdIds[0];
-
-          return knex("warehouses").where({ id: warehouseId });
-        })
-        .then((warehouses) => {
-          return res.status(201).json(warehouses[0]);
-        })
-        .catch((error) => {
-          return res.status(400).json({
-            message: "There was an issue with the request",
-            error,
-          });
-        });
+    .insert(newWarehouse)
+    .then(() => {
+      console.log(req.body);
+      return knex("warehouses").where("id", newWarehouse.id).first();
+    })
+    .then((newWarehouse) => {
+      console.log("Got warehouse:", newWarehouse);
+      return res.status(201).json(newWarehouse);
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
     });
 };
 

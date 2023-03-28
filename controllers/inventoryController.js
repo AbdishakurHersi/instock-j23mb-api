@@ -1,4 +1,5 @@
 const knex = require("knex")(require("../knexfile"));
+const uniqid = require("uniqid");
 
 exports.index = (_req, res) => {
   knex("inventories")
@@ -64,24 +65,90 @@ exports.warehouseInventories = (req, res) => {
 };
 
 exports.deleteInventoryItem = (req, res) => {
-   // Delete the warehouse with ID matching req.params.id
-   knex("inventories")
-     .where({ id: req.params.id })
-     .del()
-     .then((numItemsDeleted) => {
-       if (numItemsDeleted === 0) {
-         return res.status(404).json({
-           message: `Inventory item with id: ${req.params.id} not found`,
-         });
-       }
- 
-       // 204 - No Content
-       res.sendStatus(204);
-     })
-     .catch((error) => {
-       return res.status(400).json({
-         message: "There was an issue with the request",
-         error,
-       });
-     });
- };
+  // Delete the warehouse with ID matching req.params.id
+  knex("inventories")
+    .where({ id: req.params.id })
+    .del()
+    .then((numItemsDeleted) => {
+      if (numItemsDeleted === 0) {
+        return res.status(404).json({
+          message: `Inventory item with id: ${req.params.id} not found`,
+        });
+      }
+
+      // 204 - No Content
+      res.sendStatus(204);
+    })
+    .catch((error) => {
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
+    });
+};
+
+// Edits information for an single inventory item by inventory id.
+
+exports.updateInventoryItem = (req, res) => {
+  // Check for an empty field in the PUT body request.
+  if (
+    !req.body.id ||
+    !req.body.warehouse_id ||
+    !req.body.item_name ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.status
+  ) {
+    res.status(400).json({
+      message: "All fields are required.  Please check your entries.",
+    });
+  }
+  knex("inventories")
+    .update(req.body)
+    .where({ id: req.params.id })
+    .then(() => {
+      res
+        .status(200)
+        .send(`Warehouse with id: ${req.params.id} has been updated`);
+    })
+    .catch((err) =>
+      res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`)
+    );
+}
+
+//POST Request - Add New Inventory
+exports.addInventory = (req, res) => {
+  if (
+    !req.body.warehouse_id ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.quantity ||
+    !req.body.item_name ||
+    !req.body.status
+  ) {
+    return res.status(400).json({
+      message:
+        "Missing one or more required fields: name, description, category, quantity, warehouse",
+    });
+  }
+  //Insert new inventory
+  console.log("Inserting record...");
+
+  const newInventory = { ...req.body, id: uniqid() };
+
+  knex("inventories")
+    .insert(newInventory)
+    .then(() => {
+      return knex("inventories").where("id", newInventory.id).first();
+    })
+    .then((newInventory) => {
+      console.log("Got inventory:", newInventory);
+      return res.status(201).json(newInventory);
+    })
+    .catch((error) => {
+      return res.status(400).json({
+        message: "There was an issue with the request",
+        error,
+      });
+    });
+};
