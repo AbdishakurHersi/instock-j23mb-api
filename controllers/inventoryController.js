@@ -87,6 +87,35 @@ exports.deleteInventoryItem = (req, res) => {
     });
 };
 
+// Edits information for an single inventory item by inventory id.
+
+exports.updateInventoryItem = (req, res) => {
+  // Check for an empty field in the PUT body request.
+  if (
+    !req.body.id ||
+    !req.body.warehouse_id ||
+    !req.body.item_name ||
+    !req.body.description ||
+    !req.body.category ||
+    !req.body.status ||
+    !req.body.quantity
+  ) {
+    res.status(400).json({
+      message: "All fields are required.  Please check your entries.",
+    });
+  }
+  knex("inventories")
+    .update(req.body)
+    .where({ id: req.params.id })
+    .then(() => {
+      res
+        .status(200)
+        .send(`Warehouse with id: ${req.params.id} has been updated`);
+    })
+    .catch((err) =>
+      res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`)
+    );
+
 //POST Request - Add New Inventory
 exports.addInventory = (req, res) => {
   if (
