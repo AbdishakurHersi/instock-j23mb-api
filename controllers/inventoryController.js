@@ -97,8 +97,7 @@ exports.updateInventoryItem = (req, res) => {
     !req.body.item_name ||
     !req.body.description ||
     !req.body.category ||
-    !req.body.status ||
-    !req.body.quantity
+    !req.body.status
   ) {
     res.status(400).json({
       message: "All fields are required.  Please check your entries.",
@@ -115,6 +114,7 @@ exports.updateInventoryItem = (req, res) => {
     .catch((err) =>
       res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`)
     );
+}
 
 //POST Request - Add New Inventory
 exports.addInventory = (req, res) => {
@@ -139,7 +139,6 @@ exports.addInventory = (req, res) => {
   knex("inventories")
     .insert(newInventory)
     .then(() => {
-      console.log(req.body);
       return knex("inventories").where("id", newInventory.id).first();
     })
     .then((newInventory) => {
