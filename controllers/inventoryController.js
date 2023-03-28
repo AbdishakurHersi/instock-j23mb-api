@@ -107,24 +107,11 @@ exports.updateInventoryItem = (req, res) => {
     .update(req.body)
     .where({ id: req.params.id })
     .then(() => {
-      return knex("inventories").where({ id: req.params.id });
+      res
+        .status(200)
+        .send(`Warehouse with id: ${req.params.id} has been updated`);
     })
-    .then((inventories) => {
-      if (inventories.length === 0) {
-        return res.status(404).json({
-          message: `Unable to find inventory with id: ${req.params.id}`,
-        });
-      } else {
-        res.status(200).json({
-          message: `Successfully updated inventory: ${req.params.id}`,
-          inventory: inventories[0],
-        });
-      }
-    })
-    .catch((error) => {
-      return res.status(400).json({
-        message: "There was an issue with the request",
-        error,
-      });
-    });
+    .catch((err) =>
+      res.status(400).send(`Error updating Warehouse ${req.params.id} ${err}`)
+    );
 };
